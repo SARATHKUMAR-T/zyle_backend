@@ -1,29 +1,8 @@
 import express from "express";
 import nodemailer from "nodemailer";
-import multer from "multer";
-import path from "path";
-import { fileURLToPath } from "url";
 export const mailRouter = express.Router();
 
-// Get the directory path using 'import.meta.url'
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const destinationPath = path.join(__dirname, "../uploads");
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, destinationPath);
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  },
-});
-
-const upload = multer({ storage: storage });
-
-mailRouter.post("/mail", upload.single("file"), async (req, res) => {
-  console.log(req.body);
+mailRouter.post("/mail", async (req, res) => {
   try {
     var transporter = nodemailer.createTransport({
       service: "gmail",
@@ -39,16 +18,32 @@ mailRouter.post("/mail", upload.single("file"), async (req, res) => {
     var mailOptions = {
       from: "spellbee931@gmail.com",
       to: req.body.mailTo,
-      subject: req.body.subject || "Default Subject",
+      subject: req.body.subject || "Greeting From zyle",
       replyTo: req.body.from,
-      text: req.body.message,
-      attachments: [
-        {
-          filename: req.file.originalname,
-          path: req.file.path,
-        },
-      ],
     };
+
+    if (req.body.file.url) {
+      mailOptions.attachments = [
+        {
+          filename: req.body.file.name,
+          path: req.body.file.url,
+        },
+      ];
+    }
+
+    const htmlMessage = `
+    <html>
+      <body>
+      <h2>${
+        req.body.subject ? `${req.body.subject}` : "Greetings from Zyle"
+      }</h2>
+      <p>${req.body.message}</p>
+       
+      </body>
+    </html>
+  `;
+
+    mailOptions.html = htmlMessage;
 
     transporter.sendMail(mailOptions, function (error, info) {
       if (error) {

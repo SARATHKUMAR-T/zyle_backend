@@ -51,6 +51,7 @@ leadRouter.patch("/update-status/:id", isAuthenticated, async (req, res) => {
   }
 });
 
+// delete Route
 leadRouter.delete("/delete-lead/:id", isAuthenticated, async (req, res) => {
   try {
     const deleteLead = await LeadDetails.findByIdAndDelete({
